@@ -15,32 +15,50 @@ openai_api_kev = st.secrets.OPENAI_API_KEY
 
 client = OpenAI(api_key=openai_api_kev)
 
+# Sidebar Options
+summary_type = st.sidebar.selectbox(
+    "Choose summary type:",
+    (
+        "Summarize in 100 words",
+        "Summarize in 2 connecting paragraphs",
+        "Summarize in 5 bullet points",
+    )
+)
+
+use_advanced = st.sidebar.checkbox("Use advanced model")
+
+if use_advanced:
+    model = "gpt-4o"
+else:
+    model = "gpt-4o-mini"
+
 # Let the user upload a file via `st.file_uploader`.
 uploaded_file = st.file_uploader(
     "Upload a document (.txt or .md)", type=("txt", "md")
 )
 
-# Ask the user for a question via `st.text_area`.
-question = st.text_area(
-    "Now ask a question about the document!",
-    placeholder="Can you give me a short summary?",
-    disabled=not uploaded_file,
-)
-
-if uploaded_file and question:
+if uploaded_file:
 
     # Process the uploaded file and question.
     document = uploaded_file.read().decode()
-    messages = [
+
+    if summary_type == "Summarize in 100 words":
+        instruction = "Summarize the document in exactly 100 words."
+    elif summary_type == "Summarize in 2 connecting paragraphs":
+        instruction = "Summarize the document in 2 connecting paragraphs."
+    else:
+        instruction = "Summarize the document in 5 concise bullet points."
+
+        messages = [
         {
             "role": "user",
-            "content": f"Here's a document: {document} \n\n---\n\n {question}",
+            "content": f"Here's a document: {document} \n\n---\n\n {instruction}",
         }
     ]
 
     # Generate an answer using the OpenAI API.
     stream = client.chat.completions.create(
-        model="gpt-4.1",
+        model="model",
         messages=messages,
         stream=True,
     )
