@@ -4,8 +4,7 @@ from openai import OpenAI
 # Show title and description.
 st.title("MY Document question answering")
 st.write(
-    "Upload a document below and ask a question about it – GPT will answer! "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
+    "Upload a PDF document below and get a summary – GPT will answer! "
 )
 
 # Ask user for their OpenAI API key via `st.text_input`.
@@ -28,20 +27,23 @@ summary_type = st.sidebar.selectbox(
 use_advanced = st.sidebar.checkbox("Use advanced model")
 
 if use_advanced:
-    model = "gpt-4o"
+    model = "gpt-5-mini"
 else:
-    model = "gpt-4o-mini"
+    model = "gpt-5-nano"
 
 # Let the user upload a file via `st.file_uploader`.
 uploaded_file = st.file_uploader(
-    "Upload a document (.txt or .md)", type=("txt", "md")
+    "Upload a document (.pdf)", type=("pdf")
 )
 
 if uploaded_file:
 
-    # Process the uploaded file and question.
-    document = uploaded_file.read().decode()
-
+    # Process the uploaded file.
+    reader = PdfReader(uploaded_file)
+    document = ""
+    for page in reader.pages:
+        document += page.extract_text() or ""
+        
     if summary_type == "Summarize in 100 words":
         instruction = "Summarize the document in exactly 100 words."
     elif summary_type == "Summarize in 2 connecting paragraphs":
