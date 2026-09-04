@@ -61,7 +61,7 @@ if uploaded_file:
 
     # Generate an answer using the OpenAI API.
     stream = client.chat.completions.create(
-        model="model",
+        model=model,
         messages=messages,
         stream=True,
     )
