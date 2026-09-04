@@ -52,7 +52,7 @@ if uploaded_file:
     else:
         instruction = "Summarize the document in 5 concise bullet points."
 
-        messages = [
+    messages = [
         {
             "role": "user",
             "content": f"Here's a document: {document} \n\n---\n\n {instruction}",
