@@ -1,8 +1,9 @@
 import streamlit as st
 from openai import OpenAI
+from pypdf import PdfReader
 
 # Show title and description.
-st.title("MY Document question answering")
+st.title("MY Document summarizer")
 st.write(
     "Upload a PDF document below and get a summary – GPT will answer! "
 )
@@ -43,7 +44,7 @@ if uploaded_file:
     document = ""
     for page in reader.pages:
         document += page.extract_text() or ""
-        
+
     if summary_type == "Summarize in 100 words":
         instruction = "Summarize the document in exactly 100 words."
     elif summary_type == "Summarize in 2 connecting paragraphs":
