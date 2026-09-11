@@ -1,8 +1,6 @@
 import streamlit as st
 from openai import OpenAI
 
-import streamlit as st
-from openai import OpenAI
 # Ask user for their OpenAI API key via `st.text_input`.
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
 # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
@@ -34,8 +32,6 @@ max_tokens = st.sidebar.number_input(
     step=100,
 )
  
-# System prompt: keeps the bot's behavior consistent, is never removed by
-# the buffering logic below, and drives the "want more info?" flow.
 system_prompt = {
     "role": "system",
     "content": (
@@ -53,34 +49,25 @@ system_prompt = {
     ),
 }
  
-# Create a session state variable to store the chat messages. This ensures
-# that the messages persist across reruns.
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Hi! What can I help you with today?"}
     ]
  
-# Display the existing chat messages via `st.chat_message`.
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
  
  
 def estimate_tokens(text):
-    # Rough estimate (~4 characters per token) - good enough for a buffer,
-    # no need for a full tokenizer.
     return max(1, len(text) // 4)
  
  
 def build_buffer(messages, buffer_type, max_tokens):
     if buffer_type == "Last 2 questions":
-        # Keep only the last 2 user messages and their assistant responses
-        # (the last 4 non-system messages).
         trimmed = messages[-4:] if len(messages) > 4 else messages
         return [system_prompt] + trimmed
     else:
-        # Token limit: keep the most recent messages that fit under
-        # max_tokens, always keeping the system prompt.
         running_total = estimate_tokens(system_prompt["content"])
         kept_reversed = []
         for msg in reversed(messages):
@@ -91,26 +78,20 @@ def build_buffer(messages, buffer_type, max_tokens):
             running_total += msg_tokens
         return [system_prompt] + list(reversed(kept_reversed))
  
- 
-# Create a chat input field to allow the user to enter a message.
 if prompt := st.chat_input("What is up?"):
  
-    # Store and display the current prompt.
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
  
-    # Build the buffered message list to send to the LLM.
     messages_to_send = build_buffer(st.session_state.messages, buffer_type, max_tokens)
  
-    # Generate a response using the OpenAI API.
     stream = client.chat.completions.create(
         model=model,
         messages=messages_to_send,
         stream=True,
     )
  
-    # Stream the response to the chat and store it in session state.
     with st.chat_message("assistant"):
         response = st.write_stream(stream)
     st.session_state.messages.append({"role": "assistant", "content": response})
