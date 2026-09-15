@@ -14,7 +14,38 @@ collection = chroma_client.get_or_create_collection('Lab4Collection')
 ## USING CHROMA DB WITH OPENAI EMBEDDINGS ####
 
 # Create OpenAI client
-if 'openai_client' not
+if 'openai_client' not in st.session_state:
+    st.session_state.openai_client = OpenAI(openai_api_kev = st.secrets.OPENAI_API_KEY)
+
+# A function that will add documents to the collection
+# collection = ChromaDB collection, already established
+# text = extracted text from PDF files
+# Embeddings inserted into the collection from OpenAI
+def add_to_collection(collection, text, file_name):
+
+    # Create an embedding
+    client = st.session_state.openai_client
+    response = client.embeddings.create(
+        input=text,
+        model='text-embedding-3-small'
+    )
+
+    # Get the Embedding
+    embedding= response.data[0].embedding
+
+    # Add embedding and document to ChromaDB
+    collection.add(
+        documents=[text],
+        ids=file_name,
+        embeddings=[embedding]
+    )
+
+#### EXTRACT TEXT FROM PDF ####
+# This function extracts text from each syllabus
+# to pass to add_to_collection
+def extract_text_from_pdf(pdf_path):
+
+#### POPULATE COLLECTION WITH PDFs 
 
 # Ask user for their OpenAI API key via `st.text_input`.
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
