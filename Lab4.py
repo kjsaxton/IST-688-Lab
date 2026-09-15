@@ -3,7 +3,18 @@ from openai import OpenAI
 import sys
 import chromadb
 from pathlib import Path
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
+
+# A fix for working with ChromaDB on streamlit community cloud
+__import__('psyqlite3')
+# create ChromaDB client
+chroma_client = chromadb.PersistentClient(path='./ChromaDB_for_Lab')
+collection = chroma_client.get_or_create_collection('Lab4Collection')
+
+## USING CHROMA DB WITH OPENAI EMBEDDINGS ####
+
+# Create OpenAI client
+if 'openai_client' not
 
 # Ask user for their OpenAI API key via `st.text_input`.
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
