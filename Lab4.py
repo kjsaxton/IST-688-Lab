@@ -6,7 +6,7 @@ from pathlib import Path
 from pypdf import PdfReader
 
 # A fix for working with ChromaDB on streamlit community cloud
-__import__('psyqlite3')
+__import__('pysqlite3.')
 # create ChromaDB client
 chroma_client = chromadb.PersistentClient(path='./ChromaDB_for_Lab')
 collection = chroma_client.get_or_create_collection('Lab4Collection')
