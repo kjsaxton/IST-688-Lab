@@ -44,9 +44,64 @@ def add_to_collection(collection, text, file_name):
 # This function extracts text from each syllabus
 # to pass to add_to_collection
 def extract_text_from_pdf(pdf_path):
+  reader = PdfReader(pdf_path)
+  text = ""
+  for page in reader.pages:
+      page_text = page.extract_text()
+      if page_text:
+          text += page_text + "\n"
+  return text
 
 #### POPULATE COLLECTION WITH PDFs 
+# This function uses extract_text_from_pdf
+# and add_to_collection to put syllabi in ChromaDB collection
+def load_pdfs_to_collection(folder_path, collection):
+    loaded = []
+    for pdf_path in Path(folder_path).glob("*.pdf"):
+        text = extract_text_from_pdf(pdf_path)
+        add_to_collection(collection, text, pdf_path.name)
+        loaded.append(pdf_path.name)
+    return loaded
 
+# Check if collection is empty and load PDFs
+if collection.count() == 0:
+    loaded = load_pdfs_to_collection('./Lab-04-Data/', collection)
+
+if 'Lab4_VectorDB' not in st.session_state:
+    st.session_state.Lab4_VectorDB = collection
+
+#### QUERYING A COLLECTION -- ONLY USED FOR TESTING ####
+# Uncomment this section to validate Part A (that the vectorDB returns
+# sensible results), then comment it back out for Part B.
+ 
+# topic = st.sidebar.text_input('Topic', placeholder='Type your topic (e.g., GenAI)...')
+#
+# if topic:
+#     response = client.embeddings.create(
+#         input=topic,
+#         model='text-embedding-3-small'
+#     )
+#
+#     # Get the embedding
+#     query_embedding = response.data[0].embedding
+#
+#     # Get the text related to this question (this prompt)
+#     results = st.session_state.Lab4_VectorDB.query(
+#         query_embeddings=[query_embedding],
+#         n_results=3  # The number of closest documents to return
+#     )
+#
+#     # Display the results
+#     st.subheader(f'Results for: {topic}')
+#
+#     for i in range(len(results['documents'][0])):
+#         doc = results['documents'][0][i]
+#         doc_id = results['ids'][0][i]
+#
+#         st.write(f'**{i+1}. {doc_id}**')
+# else:
+#     st.info('Enter a topic in the sidebar to search the collection')
+ 
 # Ask user for their OpenAI API key via `st.text_input`.
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
 # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
