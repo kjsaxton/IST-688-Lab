@@ -17,7 +17,7 @@ collection = chroma_client.get_or_create_collection('Lab4Collection')
 
 # Create OpenAI client
 if 'openai_client' not in st.session_state:
-    st.session_state.openai_client = OpenAI(openai_api_kev = st.secrets.OPENAI_API_KEY)
+    st.session_state.openai_client = OpenAI(api_key=st.secrets.OPENAI_API_KEY)
 
 # A function that will add documents to the collection
 # collection = ChromaDB collection, already established
