@@ -113,10 +113,6 @@ client = OpenAI(api_key=openai_api_kev)
  
 model = "gpt-5-mini"
  
-#### GET RELEVANT INFO FROM THE VECTOR DB ####
-# Embeds the user's prompt, queries the collection for the closest
-# matching syllabus chunks, and returns them as a text block plus
-# the filenames they came from (for transparency in the chat reply)
 def get_info_from_vectorDB(myVectorDB, prompt, n_results=3):
     response = client.embeddings.create(
         input=prompt,
@@ -211,9 +207,7 @@ if prompt := st.chat_input("What is up?"):
     with st.chat_message("user"):
         st.markdown(prompt)
  
-    # RAG step: pull relevant syllabus context for this prompt and
-    # add it into the system message before sending to the LLM
-    extra_info, source_ids = get_info_from_vectorDB(
+        extra_info, source_ids = get_info_from_vectorDB(
         st.session_state.Lab4_VectorDB, prompt
     )
  
