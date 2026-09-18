@@ -72,44 +72,43 @@ if collection.count() == 0:
 if 'Lab4_VectorDB' not in st.session_state:
     st.session_state.Lab4_VectorDB = collection
 
-#### QUERYING A COLLECTION -- ONLY USED FOR TESTING ####
-# Uncomment this section to validate Part A (that the vectorDB returns
-# sensible results), then comment it back out for Part B.
- 
-# topic = st.sidebar.text_input('Topic', placeholder='Type your topic (e.g., GenAI)...')
-#
-# if topic:
-#     response = client.embeddings.create(
-#         input=topic,
-#         model='text-embedding-3-small'
-#     )
-#
-#     # Get the embedding
-#     query_embedding = response.data[0].embedding
-#
-#     # Get the text related to this question (this prompt)
-#     results = st.session_state.Lab4_VectorDB.query(
-#         query_embeddings=[query_embedding],
-#         n_results=3  # The number of closest documents to return
-#     )
-#
-#     # Display the results
-#     st.subheader(f'Results for: {topic}')
-#
-#     for i in range(len(results['documents'][0])):
-#         doc = results['documents'][0][i]
-#         doc_id = results['ids'][0][i]
-#
-#         st.write(f'**{i+1}. {doc_id}**')
-# else:
-#     st.info('Enter a topic in the sidebar to search the collection')
- 
 # Ask user for their OpenAI API key via `st.text_input`.
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
 # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
 openai_api_kev = st.secrets.OPENAI_API_KEY
 
 client = OpenAI(api_key=openai_api_kev)
+
+#### QUERYING A COLLECTION -- ONLY USED FOR TESTING ####
+# Comment this section back out (or delete it) once you move on to Part B.
+ 
+topic = st.sidebar.text_input('Topic', placeholder='Type your topic (e.g., GenAI)...')
+ 
+if topic:
+    response = client.embeddings.create(
+        input=topic,
+        model='text-embedding-3-small'
+    )
+ 
+    # Get the embedding
+    query_embedding = response.data[0].embedding
+ 
+    # Get the text related to this question (this prompt)
+    results = st.session_state.Lab4_VectorDB.query(
+        query_embeddings=[query_embedding],
+        n_results=3  # The number of closest documents to return
+    )
+ 
+    # Display the results
+    st.subheader(f'Results for: {topic}')
+ 
+    for i in range(len(results['documents'][0])):
+        doc = results['documents'][0][i]
+        doc_id = results['ids'][0][i]
+ 
+        st.write(f'**{i+1}. {doc_id}**')
+else:
+    st.info('Enter a topic in the sidebar to search the collection') 
 
 # Sidebar Options
 use_advanced = st.sidebar.checkbox("Use advanced model")
