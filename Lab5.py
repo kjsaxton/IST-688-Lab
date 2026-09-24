@@ -20,5 +20,12 @@ def get_current_weather(location):
     current = data['current_condition'][0]
     # two examples; note that some values are nested one level deeper
     return {'location': location,
-            'temperature': float(current['temp_F']),
-            'description': current['weatherDesc'][0]['value']}
+        'temperature': float(current['temp_F']),
+        'description': current['weatherDesc'][0]['value'],
+        'feels_like': float(current['FeelsLikeF']),
+        'humidity': float(current['humidity']),
+        'wind_speed': float(current['windspeedMiles']),
+        'cloud_cover': float(current['cloudcover']),
+        'uv_index': float(current['uvIndex'])}
+
+print(get_current_weather("Lima, Peru"))
