@@ -55,3 +55,10 @@ if st.button("Get advice"):
         location = city
     else:
         location = "Syracuse, NY"
+
+first_response = client.chat.completions.create(
+    model="gpt-5-mini",
+    messages=messages,
+    tools=[weather_tool],
+    tool_choice="auto",
+)
