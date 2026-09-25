@@ -50,7 +50,8 @@ weather_tool = {
 
 city = st.text_input("Enter a city:", placeholder="e.g. Syracuse, NY")
 
-if city:
-    location = city
-else:
-    location = "Syracuse, NY"
+if st.button("Get advice"):
+    if city:
+        location = city
+    else:
+        location = "Syracuse, NY"
