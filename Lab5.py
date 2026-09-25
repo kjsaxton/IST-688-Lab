@@ -1,7 +1,10 @@
 import requests
-# location can be a city, a zip code, an airport code ('SYR'),
-# or a landmark ('Eiffel+Tower')
-# note: hard codes units to degrees Fahrenheit
+import json
+import streamlit as st
+from openai import OpenAI
+
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
 def get_current_weather(location):
     url = f'https://wttr.in/{location}?format=j1'
     response = requests.get(url, timeout=10)
@@ -10,15 +13,8 @@ def get_current_weather(location):
     try:
         data = response.json()
     except ValueError:
-        # unknown locations come back as plain text, not JSON
         raise Exception(f'Could not find a location named {location}')
-    # j1 has three top-level sections:
-    # current_condition -- one entry, conditions right now
-    # weather -- three entries, one per day, each with
-    # min/max, astronomy, and hourly forecasts
-    # nearest_area -- the location wttr.in actually matched
     current = data['current_condition'][0]
-    # two examples; note that some values are nested one level deeper
     return {'location': location,
         'temperature': float(current['temp_F']),
         'description': current['weatherDesc'][0]['value'],
@@ -27,8 +23,6 @@ def get_current_weather(location):
         'wind_speed': float(current['windspeedMiles']),
         'cloud_cover': float(current['cloudcover']),
         'uv_index': float(current['uvIndex'])}
-
-print(get_current_weather("Lima, Peru"))
 
 weather_tool = {
     "type": "function",
@@ -48,17 +42,41 @@ weather_tool = {
     },
 }
 
+st.title("What to Wear Bot")
 city = st.text_input("Enter a city:", placeholder="e.g. Syracuse, NY")
 
 if st.button("Get advice"):
-    if city:
-        location = city
-    else:
-        location = "Syracuse, NY"
+    location = city if city else "Syracuse, NY"
 
-first_response = client.chat.completions.create(
-    model="gpt-5-mini",
-    messages=messages,
-    tools=[weather_tool],
-    tool_choice="auto",
-)
+    messages = [
+        {"role": "user", "content": f"What should I wear today in {location}, and what outdoor activities suit the weather?"}
+    ]
+
+    first_response = client.chat.completions.create(
+        model="gpt-5-mini",
+        messages=messages,
+        tools=[weather_tool],
+        tool_choice="auto",
+    )
+
+    first_message = first_response.choices[0].message
+    tool_calls = first_message.tool_calls
+
+    if not tool_calls:
+        st.markdown(first_message.content)
+    else:
+        messages.append(first_message)
+        for tool_call in tool_calls:
+            args = json.loads(tool_call.function.arguments)
+            weather_data = get_current_weather(args["location"])
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": json.dumps(weather_data),
+            })
+
+        second_response = client.chat.completions.create(
+            model="gpt-5-mini",
+            messages=messages,
+        )
+        st.markdown(second_response.choices[0].message.content)
