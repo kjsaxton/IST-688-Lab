@@ -29,3 +29,21 @@ def get_current_weather(location):
         'uv_index': float(current['uvIndex'])}
 
 print(get_current_weather("Lima, Peru"))
+
+weather_tool = {
+    "type": "function",
+    "function": {
+        "name": "get_current_weather",
+        "description": "Get todays weather and forecast and use that to give advice on what to wear",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "City and state/country, like 'Syracuse, NY' or 'Lima, Peru'. If there is a request for weather with no location, use 'Syracuse, NY' as the default",
+                },
+            },
+            "required": ["location"],
+        },
+    },
+}
