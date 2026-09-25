@@ -67,13 +67,16 @@ if st.button("Get advice"):
     else:
         messages.append(first_message)
         for tool_call in tool_calls:
-            args = json.loads(tool_call.function.arguments)
-            weather_data = get_current_weather(args["location"])
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": json.dumps(weather_data),
-            })
+    args = json.loads(tool_call.function.arguments)
+    try:
+        weather_data = get_current_weather(args["location"])
+    except Exception as e:
+        weather_data = {"error": str(e)}
+    messages.append({
+        "role": "tool",
+        "tool_call_id": tool_call.id,
+        "content": json.dumps(weather_data),
+    })
 
         second_response = client.chat.completions.create(
             model="gpt-5-mini",
