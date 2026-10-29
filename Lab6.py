@@ -1,16 +1,3 @@
-"""
-Offline grader for IST 688 Lab 06 (Responses API FAQ bot).
- 
-Usage:  python grade_lab.py path/to/student/lab_starter.py
- 
-It injects a fake `openai` package (no network, no real key), runs the
-student's script with --mode basic / tool / followup, and checks the
-requests the student's code actually sends.
- 
-Assumptions (adjust FAKE_ARGS below if the starter differs):
-  - student code does `from openai import OpenAI` and `client.responses.create(...)`
-  - the tool is named lookup_campus_faq and takes a "topic" argument
-"""
 import json
 import os
 import re
@@ -19,7 +6,7 @@ import sys
 import tempfile
 from pathlib import Path
  
-FAKE_ARGS = {"topic": "room"}  # change if your FAQ tool uses a different argument
+FAKE_ARGS = {"topic": "it_support"}  # matches the enum in the starter's FAQ_TOOL
  
 FAKE_OPENAI = r'''
 import json, os
@@ -47,7 +34,7 @@ class _Responses:
         with open(LOG, "a") as f:
             f.write(json.dumps({"n": _n, "kwargs": _ser(kw)}, default=str) + "\n")
         already_has_output = "function_call_output" in json.dumps(_ser(kw.get("input")), default=str)
-        if MODE == "tool" and kw.get("tools") and not already_has_output:
+        if MODE in ("tool", "followup") and kw.get("tools") and not already_has_output:
             out = [_Obj(type="function_call", name="lookup_campus_faq",
                         arguments=json.dumps(__ARGS__), call_id="call_test_123", id="fc_1")]
             text = ""
@@ -117,7 +104,8 @@ def main():
         check("Script runs without error", p.returncode == 0, p.stderr.strip()[-300:])
         check("Made at least 2 create calls", len(calls) >= 2, f"made {len(calls)}")
         if len(calls) >= 2:
-            second = calls[1]["kwargs"]
+            first, second = calls[0]["kwargs"], calls[1]["kwargs"]
+            check("1st call offers the tool and requires it", bool(first.get("tools")) and first.get("tool_choice") == "required")
             blob = json.dumps(second.get("input"), default=str)
             check("2nd call contains function_call_output", "function_call_output" in blob)
             check("call_id matches the model's call_id", "call_test_123" in blob)
@@ -125,22 +113,28 @@ def main():
                     if isinstance(i, dict) and i.get("type") == "function_call_output"]
             check("output is a JSON string (json.dumps)",
                   bool(outs) and all(isinstance(o.get("output"), str) for o in outs))
-            check("2nd call still passes model", bool(second.get("model")))
+            check("Tool output came from the real lookup (Tech Hall, Room 120)", "Room 120" in blob)
+            check("2nd call links to 1st via previous_response_id=resp_1",
+                  second.get("previous_response_id") == "resp_1", f"got {second.get('previous_response_id')}")
+            check("2nd call keeps model + instructions", bool(second.get("model")) and bool(second.get("instructions")))
+            check("2nd call uses tool_choice='none'", second.get("tool_choice") == "none", f"got {second.get('tool_choice')}")
         check("Final answer printed", "FAKE" in p.stdout)
  
         # ---- followup ----
         print("\n== TODO 3: followup ==")
         p, calls = run_mode(student_file, "followup", wd)
         check("Script runs without error", p.returncode == 0, p.stderr.strip()[-300:])
-        prev_ids = [c["kwargs"].get("previous_response_id") for c in calls]
-        valid_ids = {f"resp_{c['n']}" for c in calls}
-        check("A request includes previous_response_id", any(prev_ids))
-        check("previous_response_id is a real earlier response id",
-              any(pid in valid_ids for pid in prev_ids if pid),
-              f"saw {prev_ids}")
-        if calls:
-            check("Follow-up's FIRST request carries previous_response_id (not only a later one)",
-                  any(c["kwargs"].get("previous_response_id") for c in calls[1:2] or calls[:1]))
+        check("Made 4 create calls (2 per question)", len(calls) == 4, f"made {len(calls)}")
+        if len(calls) >= 3:
+            q1_first = calls[0]["kwargs"].get("previous_response_id")
+            q2_first = calls[2]["kwargs"].get("previous_response_id")
+            check("Question 1 does NOT send a previous_response_id", not q1_first, f"got {q1_first}")
+            check("Question 2's FIRST request carries previous_response_id = answer 1's id (resp_2)",
+                  q2_first == "resp_2", f"got {q2_first}")
+        if len(calls) >= 4:
+            check("Question 2's second request chains to its own first call (resp_3)",
+                  calls[3]["kwargs"].get("previous_response_id") == "resp_3",
+                  f"got {calls[3]['kwargs'].get('previous_response_id')}")
  
     print(f"\n{sum(results)}/{len(results)} checks passed")
     print("Still check manually: reflection answers (function_call vs function_call_output, "
@@ -149,3 +143,4 @@ def main():
  
 if __name__ == "__main__":
     main()
+ 
