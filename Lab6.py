@@ -4,6 +4,12 @@ import os
 from pathlib import Path
 from openai import OpenAI
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).with_name(".env"))
+except ImportError:
+    pass
+
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5-mini")
 FAQ_PATH = Path(__file__).with_name("campus_faq.json")
 INSTRUCTIONS = (
@@ -58,7 +64,7 @@ def ask_with_tool(client, question, previous_response_id=None):
         "tool_choice": "required",
         "store": True,
     }
-    # TODO 3: link this question to the earlier conversation turn
+    # TODO 3:
     if previous_response_id:
         request["previous_response_id"] = previous_response_id
 
@@ -94,8 +100,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["basic", "tool", "followup"], default="tool")
     args = parser.parse_args()
-    if not os.getenv("OPENAI_API_KEY"):
-        raise SystemExit("Missing OPENAI_API_KEY. See student handout or run offline_trace.py.")
     client = OpenAI()
     if args.mode == "basic":
         print(basic_text(client, "Explain an API in two sentences."))
@@ -111,4 +115,3 @@ def main():
 
 if __name__ == "__main__":
     main()
- 
