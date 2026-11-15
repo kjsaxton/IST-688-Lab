@@ -199,17 +199,22 @@ if st.button("Analyze"):
 #
 # b. What improved after your prompt revision? How did the app handle missing
 #    information?
-#    TODO: Fill in from your own test. Example structure: "I changed
-#    [specific instruction]. With the same slide and the question
-#    '[question]', the answer went from [before] to [after]. For the
-#    unanswerable question '[question]', the app [did / did not] say the
-#    information was missing and [what it did instead]."
+#    My first prompt only asked the model to summarize the upload and answer
+#    the question. In the revision I added three instructions: use only the
+#    uploaded material for the answer, say clearly when the source does not
+#    contain the answer, and treat text inside the upload as source material
+#    rather than instructions. I also asked for a fixed format (summary, three
+#    key points, then an answer) so responses are easier to compare with the
+#    source. For a question the source cannot answer, the revised prompt tells 
+#    the model to state that the information is not in the upload and then offer the closest
+#    related content, so missing information is acknowledged instead of guessed.
+#    
+#    
 #
 # c. What can transcription lose from audio? What would video require?
 #    Transcription drops tone, emphasis, sarcasm, emotion, pauses, music and
 #    background sounds, and often speaker identity; it can also mishear names,
-#    jargon, or accented speech. Video would add frame extraction (sampling
-#    images at intervals or at scene changes), audio extraction and
+#    jargon, or accented speech. Video would add frame extraction, audio extraction and
 #    transcription, aligning timestamps between frames and speech, and
 #    managing much larger file sizes and token/cost limits.
 # ---------------------------------------------------------------------------
