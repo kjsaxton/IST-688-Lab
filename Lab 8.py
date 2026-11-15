@@ -7,19 +7,16 @@ import streamlit as st
 from openai import OpenAI
 
 try:
-    from mutagen import File as MutagenFile  # optional: MP3/M4A length check
+    from mutagen import File as MutagenFile  
 except ImportError:
     MutagenFile = None
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-MAX_BYTES = 5 * 1024 * 1024  # 5 MB
+MAX_BYTES = 5 * 1024 * 1024  
 MAX_AUDIO_SECONDS = 60
 
 
-# ---------------------------------------------------------------------------
-# Part A: helper functions (from the handout)
-# ---------------------------------------------------------------------------
 def prepare_image(upload):
     formats = {".png": "image/png", ".jpg": "image/jpeg",
                ".jpeg": "image/jpeg"}
@@ -44,9 +41,6 @@ def analyze_content(content, prompt):
     return response.output_text
 
 
-# ---------------------------------------------------------------------------
-# Part B: prompts
-# ---------------------------------------------------------------------------
 IMAGE_PROMPT = """You are the "See and Hear" Assistant. You are given an image
 (a slide, screenshot, chart, or photo) and, optionally, a user question.
 
@@ -116,9 +110,6 @@ def audio_duration_seconds(upload):
     return None
 
 
-# ---------------------------------------------------------------------------
-# App
-# ---------------------------------------------------------------------------
 st.title("The \"See and Hear\" Assistant")
 st.write(
     "Upload an image or an audio clip. I'll summarize it, give three key "
@@ -139,7 +130,7 @@ uploaded_file = st.file_uploader(label, type=file_types,
                                  key=f"uploader_{mode}")
 question = st.text_input("Question about the upload (optional)")
 
-# Preview
+
 if uploaded_file:
     if mode == "Image":
         st.image(uploaded_file, caption=uploaded_file.name,
@@ -147,7 +138,6 @@ if uploaded_file:
     else:
         st.audio(uploaded_file.getvalue())
 
-# Requests only run after Analyze is clicked
 if st.button("Analyze"):
     if not uploaded_file:
         st.warning(f"Please upload an {mode.lower()} file first.")
